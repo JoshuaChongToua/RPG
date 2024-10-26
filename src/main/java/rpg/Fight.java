@@ -7,6 +7,7 @@ public class Fight {
     private Game game;
     private Breakable breakable;
     private int nturn;
+    private boolean escape = false;
 
     public Fight(Game game, Monster monster) {
         this.game = game;
@@ -53,7 +54,13 @@ public class Fight {
                     break;
 
                 case "4":
-                    System.out.println("Vous avez choisi de fuir le combat !");
+                    if (attemptEscape(breakable)) {
+                        this.escape = true;
+                        System.out.println("Vous avez réussi à fuir le combat !");
+                        return;
+                    } else {
+                        System.out.println("Echec de la tentative de fuite");
+                    }
                     validAction = true;
                     break;
 
@@ -87,7 +94,7 @@ public class Fight {
         System.out.println("=============================");
     }
 
-    public boolean fightExecute(Breakable breakable) {
+    public String fightExecute(Breakable breakable) {
         if (breakable instanceof Monster monster) {
             System.out.println("Début du combat : " + this.game.getPlayer().getName() + " vs " + monster.getName());
             System.out.println("Vos pv : " + this.game.getPlayer().getHealth());
@@ -100,7 +107,7 @@ public class Fight {
             System.out.println("Tour : " + nturn);
 
             // Tant que le joueur et le monstre sont vivants
-            while (this.game.getPlayer().getHealth() > 0 && monster.getHealth() > 0) {
+            while (this.game.getPlayer().getHealth() > 0 && monster.getHealth() > 0 && !this.escape ) {
 
                 if (tourJoueur) {
                     playerTurn(monster);
@@ -134,8 +141,9 @@ public class Fight {
             System.out.println("Tour : " + nturn);
 
             // Tant que le joueur et l'obstacle sont "vivants" (ou cassables)
-            while (this.game.getPlayer().getHealth() > 0 && obstacle.getHealth() > 0) {
-                playerTurn(obstacle);
+            while (this.game.getPlayer().getHealth() > 0 && obstacle.getHealth() > 0 && !this.escape ) {
+                playerTurn(obstacle
+                );
 
                 // Empêche les points de vie d'être négatifs
                 this.game.getPlayer().setHealth(Math.max(0, this.game.getPlayer().getHealth()));
@@ -146,15 +154,41 @@ public class Fight {
                 System.out.println("Tour : " + nturn);
             }
         }
-
         // Fin du combat, affichage du résultat
         if (this.game.getPlayer().getHealth() <= 0) {
             System.out.println("Game over ! " + this.game.getPlayer().getName() + " a été vaincu !");
-            return false;
+            return "loose";
+        } else if (this.escape) {
+            return "escape";
         } else {
             System.out.println("BRAVO ! " + breakable.getName() + " a été vaincu !");
-            return true;
+            Random random = new Random();
+            double xp;
+            if (breakable instanceof Monster monster) {
+                xp = 100 + (double) (random.nextInt(201) * monster.getLevel()) / 3;
+            } else {
+                xp = 100 + random.nextInt(201);
+            }
+            this.game.getPlayer().xpManager(xp);
+            return "win";
         }
     }
+
+    private boolean attemptEscape(Breakable breakable) {
+        Random rand = new Random();
+        int chance;
+
+        if (breakable instanceof Monster monster) {
+            // Détermine la probabilité en fonction de la vitesse du joueur
+            chance = (this.game.getPlayer().getSpeed() > monster.getSpeed()) ? 2 : 4;
+        } else {
+            // Si ce n'est pas un monstre, utilise une probabilité fixe
+            chance = 3;
+        }
+
+        // Vérifie la probabilité de fuite
+        return rand.nextInt(chance) == 1;
+    }
+
 
 }

@@ -3,6 +3,7 @@ package rpg;
 import rpg.Items.Potion;
 
 import java.util.ArrayList;
+import java.util.Random;
 import java.util.Scanner;
 
 public class Player {
@@ -18,8 +19,12 @@ public class Player {
     private double maxHealth = this.health;
     private double money;
     private double xp;
-    private int x;
-    private int y;
+    private double maxXp;
+    private double stamina;
+    private double maxStamina;
+
+    private int x = 0;
+    private int y = 0;
 
     //constructeur
     public Player(String name) {
@@ -30,10 +35,7 @@ public class Player {
         this.inventaire = new ArrayList<>();
         this.weapon = null;
         this.health = 20;
-        this.x = 0;
-        this.y = 0;
-
-
+        this.maxXp = 500;
     }
 
     public Player() {
@@ -43,6 +45,7 @@ public class Player {
         this.inventaire = new ArrayList<>();
         this.weapon = null;
         this.health = 20;
+        this.maxXp = 500;
     }
 
     //getter setter
@@ -144,6 +147,22 @@ public class Player {
         this.maxHealth = maxHealth;
     }
 
+    public double getStamina() {
+        return stamina;
+    }
+
+    public void setStamina(double stamina) {
+        this.stamina = stamina;
+    }
+
+    public double getMaxStamina() {
+        return maxStamina;
+    }
+
+    public void setMaxStamina(double maxStamina) {
+        this.maxStamina = maxStamina;
+    }
+
     public int getX() {
         return x;
     }
@@ -151,6 +170,21 @@ public class Player {
     public int getY() {
         return y;
     }
+
+    public double getMaxXp() {
+        return maxXp;
+    }
+
+    public void setMaxXp() {
+        Random random = new Random();
+
+        // Génère un nombre aléatoire entre 500 et 700
+        double augmentation = 500 + random.nextInt(201); // 201 pour inclure 700
+
+        // Ajoute l'augmentation à maxXp
+        this.maxXp += augmentation;
+    }
+
 
     // Methodes
 
@@ -169,6 +203,8 @@ public class Player {
         System.out.println("def: " + getDef());
         System.out.println("speed: " + getSpeed());
         System.out.println("health: " + getHealth());
+        System.out.println("xp: " + getXp());
+        System.out.println("MaxXp: " + getMaxXp());
     }
 
     public void addItemToInventaire(Item item) {
@@ -285,20 +321,37 @@ public class Player {
         }
     }
 
+    public boolean specialAttack(Monster monster) {
+        if (this.weapon == null) {
+            System.out.println("Pas d'arme equipé");
+            return false;
+        } else if (this.stamina < 25) {
+            System.out.println("Pas assez de stamina");
+            return false;
+        } else {
+            monster.hit(this.atk * this.weapon.getSpeAtkRatio());
+            this.stamina -= 25;
+            return true;
+        }
+    };
 
     public void attack(Monster monster) {
         if (this.weapon == null) {
             monster.hit(this.atk);
+            this.stamina += 5;
         } else {
             monster.hit(this.atk * this.weapon.getMonsterRationDamage());
+            this.stamina += 5;
         }
     }
 
     public void attack(Obstacle obstacle) {
         if (this.weapon == null) {
             obstacle.hit(this.atk);
+            this.stamina += 5;
         } else {
             obstacle.hit(this.atk * this.weapon.getMonsterRationDamage());
+            this.stamina += 5;
         }
     }
 
@@ -309,6 +362,18 @@ public class Player {
     public void passTurn() {
         System.out.println("Vous avez passez votre tour");
     }
+
+    public void xpManager (double xp) {
+        this.xp += xp;
+        if (this.xp >= this.maxXp) {
+            double rest = this.xp - this.maxXp;
+            this.level ++;
+            this.xp = rest;
+            this.setMaxXp();
+            System.out.println("Félicitation vous êtes passé au niveau : " + this.level);
+        }
+    }
+
 
 
 }

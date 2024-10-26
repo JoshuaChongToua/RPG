@@ -13,10 +13,12 @@ public class Shop {
     private Random random = new Random();
     private int x;
     private int y;
+    private Player player;
 
     //Constructeur
-    public Shop(){
+    public Shop(Player player) {
         items = new ArrayList<>();
+        this.player = player;
     }
 
 
@@ -48,10 +50,10 @@ public class Shop {
 
             switch (randomChoice) {
                 case 0:
-                    items.add(new Axe()); // Créer une hache
+                    items.add(new Axe(this.player.getLevel())); // Créer une hache
                     break;
                 case 1:
-                    items.add(new Hammer()); // Créer un marteau
+                    items.add(new Hammer(this.player.getLevel())); // Créer un marteau
                     break;
                 case 2:
                     // Générer une potion avec un effet aléatoire

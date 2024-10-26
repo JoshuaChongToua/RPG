@@ -5,15 +5,18 @@ public abstract class Weapon extends Item {
     protected double damage;
     protected double monsterDamageRatio;
     protected double obstacleDamageRatio;
-
+    private String speAtkName;
+    private double speAtkRatio;
 
 
     //constructeur
-    public Weapon(double damage, String name, double price, double monsterDamageRatio, double obstacleDamageRatio) {
+    public Weapon(String name, double damage,  double price, double monsterDamageRatio, double obstacleDamageRatio, String speAtkName, double speAtkRatio) {
         super(name, price);
         this.damage = damage;
         this.monsterDamageRatio = monsterDamageRatio;
         this.obstacleDamageRatio = obstacleDamageRatio;
+        this.speAtkName = speAtkName;
+        this.speAtkRatio = speAtkRatio;
     }
 
     //getter setter
@@ -25,6 +28,22 @@ public abstract class Weapon extends Item {
         this.damage = damage;
     }
 
+    public String getSpeAtkName() {
+        return speAtkName;
+    }
+
+    public void setSpeAtkName(String speAtkName) {
+        this.speAtkName = speAtkName;
+    }
+
+    public double getSpeAtkRatio() {
+        return speAtkRatio;
+    }
+
+    public void setSpeAtkRatio(double speAtkRatio) {
+        this.speAtkRatio = speAtkRatio;
+    }
+
     //methode
 
     public double getMonsterRationDamage() {
@@ -33,6 +52,7 @@ public abstract class Weapon extends Item {
     public double getObstacleRationDamage() {
         return this.obstacleDamageRatio;
     }
+
 
     @Override
     public String toString() {

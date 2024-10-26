@@ -61,10 +61,10 @@ class ShopTile extends Tile {
     }
 }
 
-class obstacleTile extends Tile {
+class ObstacleTile extends Tile {
     private Obstacle obstacle;
 
-    public obstacleTile(Obstacle obstacle) {
+    public ObstacleTile(Obstacle obstacle) {
         this.obstacle = obstacle;
     }
 

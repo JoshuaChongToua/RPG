@@ -25,10 +25,10 @@ public class Game {
         this.monsters.add(troll);
         this.monsters.add(loup);
         this.player = new Player();
-        this.shop = new Shop();
+        this.createPlayer();
+        this.shop = new Shop(this.player);
         shop.generateItems();
 
-        this.createPlayer();
         this.gameMap = new GameMap(7, 7, this.player, this);
         startGame();
     }
@@ -72,8 +72,8 @@ public class Game {
         if (choice == 1) {
             this.player.setAtk(this.player.getAtk() + 12);
             this.player.setDef(this.player.getDef() + 12);
-            this.player.setSpeed(this.player.getSpeed() + 7);
-            this.player.setHealth(this.player.getHealth() + 17);
+            this.player.setSpeed(this.player.getSpeed() -20);
+            this.player.setHealth(this.player.getHealth() + 1000);
             this.player.setMaxHealth(this.player.getHealth());
 
             this.player.setClasse(new Warrior());

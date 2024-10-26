@@ -1,7 +1,9 @@
 package rpg;
 
 import java.util.ArrayList;
+import java.util.Objects;
 import java.util.Random;
+import java.util.Scanner;
 
 class GameMap {
     private Tile[][] map;  // Matrice de tuiles
@@ -9,9 +11,11 @@ class GameMap {
     private int height;    // Hauteur de la carte
     private Player player; // Joueur
     private Game game;
-    private int shopX = 0;
-    private int shopY = 0;
+    private int tileX = 0;
+    private int tileY = 0;
     private Shop lastShop;
+    private Monster lastMonster;
+    private Obstacle lastObstacle;
     // Référence au jeu
 
     public GameMap(int width, int height, Player player, Game game) {
@@ -49,7 +53,7 @@ class GameMap {
             addObstacle();
         }
 
-        int numberOfShop = rand.nextInt(width/2) + 1;
+        int numberOfShop = rand.nextInt(width / 2) + 1;
         for (int x = 0; x < numberOfShop; x++) {
             addShops();
         }
@@ -81,7 +85,7 @@ class GameMap {
             y = rand.nextInt(height);
         } while (x == width - 1 && y == height - 1 || x == 0 && y == 0);  // Vérifie que ce n'est pas la dernière case
 
-        map[x][y] = new ShopTile(new Shop()); // (x+1, y) pour le magasin
+        map[x][y] = new ShopTile(new Shop(this.player)); // (x+1, y) pour le magasin
 
     }
 
@@ -93,7 +97,7 @@ class GameMap {
             y = rand.nextInt(height);
         } while (x == width - 1 && y == height - 1 || x == 0 && y == 0);  // Vérifie que ce n'est pas la dernière case
 
-        map[x][y] = new obstacleTile(new Obstacle("rocher"));
+        map[x][y] = new ObstacleTile(new Obstacle("rocher"));
     }
 
 
@@ -158,13 +162,16 @@ class GameMap {
 
         if (targetTile instanceof EmptyTile) {
             // Restaurer le magasin si le joueur quitte cette case
-            if (player.getX() == shopX && player.getY() == shopY && lastShop != null) {
-                //lastShop.setPosition(shopX, shopY);
-                map[player.getX()][player.getY()] = new ShopTile(lastShop);
-                System.out.println("lalalalala");// Restaurer le magasin à son ancienne position
+            if (player.getX() == tileX && player.getY() == tileY && lastShop != null) {
+                map[tileX][tileY] = new ShopTile(lastShop); // Restaurer le magasin
+            } else if (player.getX() == tileX && player.getY() == tileY && lastMonster != null) {
+                map[tileX][tileY] = new MonsterTile(lastMonster); // Restaurer le monstre
+            } else if (player.getX() == tileX && player.getY() == tileY && lastObstacle != null) {
+                map[tileX][tileY] = new ObstacleTile(lastObstacle); // Restaurer le monstre
             } else {
-                map[player.getX()][player.getY()] = new EmptyTile();
+                map[player.getX()][player.getY()] = new EmptyTile(); // Sinon, mettre une case vide
             }
+
 
             // Déplacement du joueur
             player.setPosition(newX, newY);
@@ -173,7 +180,17 @@ class GameMap {
             Monster monster = ((MonsterTile) targetTile).getMonster();
             System.out.println("Vous rencontrez un " + monster.getName() + " !");
             Fight fight = new Fight(this.game, monster);
-            if (fight.fightExecute(monster)) {
+            if (Objects.equals(fight.fightExecute(monster), "win")) {
+                map[player.getX()][player.getY()] = new EmptyTile();
+                player.setPosition(newX, newY);
+                map[newX][newY] = new PlayerTile(player);
+                if (lastMonster != null) {
+                    this.lastMonster = null;
+                }
+            } else if (Objects.equals(fight.fightExecute(monster), "escape")) {
+                tileX = newX;
+                tileY = newY;
+                lastMonster = monster;
                 map[player.getX()][player.getY()] = new EmptyTile();
                 player.setPosition(newX, newY);
                 map[newX][newY] = new PlayerTile(player);
@@ -187,18 +204,27 @@ class GameMap {
             Shop shop = ((ShopTile) targetTile).getShop();
             System.out.println("Bienvenue au magasin !");
             this.game.goInShop();
-            shopX = newX;
-            shopY = newY;
+            tileX = newX;
+            tileY = newY;
             lastShop = shop;
-
             map[player.getX()][player.getY()] = new EmptyTile();
             player.setPosition(newX, newY);
             map[newX][newY] = new PlayerTile(player);
-        } else if (targetTile instanceof obstacleTile) {
-            Obstacle obstacle = ((obstacleTile) targetTile).getObstacle();
+        } else if (targetTile instanceof ObstacleTile) {
+            Obstacle obstacle = ((ObstacleTile) targetTile).getObstacle();
             System.out.println("Vous rencontrez un " + obstacle.getName() + " !");
             Fight fight = new Fight(this.game, obstacle);
-            if (fight.fightExecute(obstacle)) {
+            if (Objects.equals(fight.fightExecute(obstacle), "win")) {
+                map[player.getX()][player.getY()] = new EmptyTile();
+                player.setPosition(newX, newY);
+                map[newX][newY] = new PlayerTile(player);
+                if (lastObstacle != null) {
+                    this.lastObstacle = null;
+                }
+            } else if (Objects.equals(fight.fightExecute(obstacle), "escape")) {
+                tileX = newX;
+                tileY = newY;
+                lastObstacle = obstacle;
                 map[player.getX()][player.getY()] = new EmptyTile();
                 player.setPosition(newX, newY);
                 map[newX][newY] = new PlayerTile(player);
@@ -213,9 +239,30 @@ class GameMap {
             map[player.getX()][player.getY()] = new EmptyTile();
             player.setPosition(newX, newY);
             map[newX][newY] = new PlayerTile(player);
-            return true;
+            Scanner scanner = new Scanner(System.in);
+            String input;
+            while (true) { // Boucle infinie jusqu'à ce qu'une entrée valide soit donnée
+                System.out.print("Voulez-vous continuer ? (oui/non) : ");
+                input = scanner.nextLine().toLowerCase();
+
+                switch (input) {
+                    case "oui":
+                    case "o":
+                        this.game.getPlayer().setPosition(0, 0);
+                        generateMap();
+                        return false;
+
+                    case "non":
+                    case "n":
+                        return true;
+
+                    default:
+                        System.out.println("Entrée invalide. Veuillez ressaisir (oui/non).");
+                }
+            }
         }
         return false;
     }
+
 
 }
