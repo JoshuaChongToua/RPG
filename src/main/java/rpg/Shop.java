@@ -3,6 +3,7 @@ package rpg;
 import rpg.Items.Potion;
 import rpg.Weapons.Axe;
 import rpg.Weapons.Hammer;
+import rpg.Weapons.Spellbook;
 
 import java.util.ArrayList;
 import java.util.Random;
@@ -44,9 +45,9 @@ public class Shop {
 
     public void generateItems() {
         Random random = new Random();
-        int count = random.nextInt(10)+1;
+        int count = random.nextInt(10) + 1;
         for (int i = 0; i < count; i++) {
-            int randomChoice = random.nextInt(3); // 0: Axe, 1: Hammer, 2: Potion
+            int randomChoice = random.nextInt(4); // 0: Axe, 1: Hammer, 2: Potion, 3: Spellbook
 
             switch (randomChoice) {
                 case 0:
@@ -61,11 +62,13 @@ public class Shop {
                     int potionValue = random.nextInt(20) + 1; // Générer une valeur aléatoire pour la potion
                     items.add(new Potion("Potion", 10.0, potionValue, randomEffect)); // Créer une potion avec un effet aléatoire
                     break;
+
+                case 3:
+                    items.add(new Spellbook(this.player.getLevel()));
+                    break;
             }
         }
     }
-
-
 
 
 }

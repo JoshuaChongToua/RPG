@@ -1,5 +1,8 @@
 package rpg;
 
+import rpg.Classes.Mage;
+
+import java.util.Objects;
 import java.util.Random;
 import java.util.Scanner;
 
@@ -27,7 +30,15 @@ public class Fight {
 
         boolean validAction = false;
         while (!validAction) {
-            System.out.println("1. Attaquer   2. Inventaire   3. Passez le tour   4. Fuir");
+            if (Objects.equals(this.game.getPlayer().getClasse().getName(), "Mage")) {
+                Mage mage = (Mage) this.game.getPlayer().getClasse();
+                System.out.println("Mana : " + mage.getMana());
+                System.out.println("1. Attaquer   2. Sorts   3. Inventaire   4. Passez le tour   5. Fuir");
+
+            } else {
+                System.out.println("Stamina : " + this.game.getPlayer().getStamina());
+                System.out.println("1. Attaquer   2. Attaque Spéciale   3. Inventaire   4. Passez le tour   5. Fuir");
+            }
             String choice = sc.nextLine();
             System.out.println("=============================");
 
@@ -44,16 +55,65 @@ public class Fight {
                     break;
 
                 case "2":
+                    if (breakable instanceof Monster monster) {
+                        if (!Objects.equals(this.game.getPlayer().getClasse().getName(), "Mage")) {
+                            if (this.game.getPlayer().specialAttack(monster)) {
+                                System.out.println("Vous utilisé votre attaque spéciale sur la cible");
+                                validAction = true;
+                            }
+                        } else {
+                            Mage mage = (Mage) this.game.getPlayer().getClasse();
+                            System.out.println("1. Bruler   2. Geler   3. Paraliser   5. Retour");
+                            String choiceSpells = sc.nextLine();
+                            switch (choiceSpells) {
+                                case "1":
+                                    if (mage.burn(monster)) {
+                                        validAction = true;
+                                    }
+                                    break;
+
+                                case "2":
+                                    if (mage.freeze(monster)) {
+                                        validAction = true;
+                                    }
+                                    break;
+
+                                case "3":
+                                    if (mage.paralyse(monster)) {
+                                        validAction = true;
+                                    }
+                                    break;
+
+//                                case "4":
+//                                    mage.poison(monster);
+//                                    validAction = true;
+//                                    break;
+
+                                case "5":
+                                    break;
+
+                                default:
+                                    System.out.println("Choix invalide. Essayez de nouveau.");
+                                    break;
+                            }
+                        }
+                    } else {
+                        System.out.println("La cible n'est pas un monstre");
+                    }
+
+                    break;
+
+                case "3":
                     System.out.println("Affichage de l'inventaire...");
                     this.game.getPlayer().showInventaire();
                     break; // Pas de validAction = true ici pour permettre de choisir une autre action
 
-                case "3":
+                case "4":
                     this.game.getPlayer().passTurn();
                     validAction = true;
                     break;
 
-                case "4":
+                case "5":
                     if (attemptEscape(breakable)) {
                         this.escape = true;
                         System.out.println("Vous avez réussi à fuir le combat !");
@@ -63,19 +123,21 @@ public class Fight {
                     }
                     validAction = true;
                     break;
-
+                case "6":
+                    if (breakable instanceof Monster monster) {
+                        monster.showStats();
+                    }
                 default:
                     System.out.println("Choix invalide. Essayez de nouveau.");
                     break;
             }
 
             // Affiche les points de vie du joueur et de la cible
-            System.out.println("Vos pv : " + this.game.getPlayer().getHealth());
-            System.out.println("Pv de la cible : " + breakable.getHealth());
+            System.out.println("Vos pv : " + Math.round(this.game.getPlayer().getHealth()*100)/100);
+            System.out.println("Pv Monstre : " + Math.round(this.breakable.getHealth() * 100)/100);
             System.out.println("=============================");
         }
     }
-
 
 
     public void monsterTurn() {
@@ -89,16 +151,16 @@ public class Fight {
         } else { // Si le nombre tiré est superieur à 70 le monstre passe son tour
             this.breakable.passTurn();
         }
-        System.out.println("Vos pv : " + this.game.getPlayer().getHealth());
-        System.out.println("Pv Monstre : " + this.breakable.getHealth());
+        System.out.println("Vos pv : " + Math.round(this.game.getPlayer().getHealth()*100)/100);
+        System.out.println("Pv Monstre : " + Math.round(this.breakable.getHealth() * 100)/100);
         System.out.println("=============================");
     }
 
     public String fightExecute(Breakable breakable) {
         if (breakable instanceof Monster monster) {
             System.out.println("Début du combat : " + this.game.getPlayer().getName() + " vs " + monster.getName());
-            System.out.println("Vos pv : " + this.game.getPlayer().getHealth());
-            System.out.println("Pv Monstre : " + monster.getHealth());
+            System.out.println("Vos pv : " + Math.round(this.game.getPlayer().getHealth()*100)/100);
+            System.out.println("Pv Monstre : " + Math.round(monster.getHealth() * 100)/100);
 
             // La vitesse indique qui commence
             var tourJoueur = this.game.getPlayer().getSpeed() >= monster.getSpeed();
@@ -107,13 +169,13 @@ public class Fight {
             System.out.println("Tour : " + nturn);
 
             // Tant que le joueur et le monstre sont vivants
-            while (this.game.getPlayer().getHealth() > 0 && monster.getHealth() > 0 && !this.escape ) {
-
+            while (this.game.getPlayer().getHealth() > 0 && monster.getHealth() > 0 && !this.escape) {
+                this.resetState();
                 if (tourJoueur) {
-                    playerTurn(monster);
+                    this.checkStatePlayer(monster);
                     valideTurn++;
                 } else {
-                    monsterTurn();
+                    this.checkStateMonster();
                     valideTurn++;
                 }
 
@@ -134,14 +196,13 @@ public class Fight {
 
         } else if (breakable instanceof Obstacle obstacle) {
             System.out.println("Début du combat : " + this.game.getPlayer().getName() + " vs " + obstacle.getName());
-            System.out.println("Vos pv : " + this.game.getPlayer().getHealth());
-            System.out.println("Pv Obstacle : " + obstacle.getHealth());
+            System.out.println("Vos pv : " + Math.round(this.game.getPlayer().getHealth()*100)/100);
+            System.out.println("Pv Obstacle : " + Math.round(obstacle.getHealth()*100)/100);
 
             int nturn = 1;
             System.out.println("Tour : " + nturn);
 
-            // Tant que le joueur et l'obstacle sont "vivants" (ou cassables)
-            while (this.game.getPlayer().getHealth() > 0 && obstacle.getHealth() > 0 && !this.escape ) {
+            while (this.game.getPlayer().getHealth() > 0 && obstacle.getHealth() > 0 && !this.escape) {
                 playerTurn(obstacle
                 );
 
@@ -149,7 +210,7 @@ public class Fight {
                 this.game.getPlayer().setHealth(Math.max(0, this.game.getPlayer().getHealth()));
                 obstacle.setHealth(Math.max(0, obstacle.getHealth()));
 
-                // Incrémentation de nturn après chaque tour complet
+                // Incrémentation de nturn après chaque tour complet (joueur + breakable)
                 nturn++;
                 System.out.println("Tour : " + nturn);
             }
@@ -169,6 +230,9 @@ public class Fight {
             } else {
                 xp = 100 + random.nextInt(201);
             }
+            int money = 50 + random.nextInt(51);
+            this.game.getPlayer().setMoney(this.game.getPlayer().getMoney() + money);
+            System.out.println("Vous recevez : " + money + " pièces");
             this.game.getPlayer().xpManager(xp);
             return "win";
         }
@@ -190,5 +254,64 @@ public class Fight {
         return rand.nextInt(chance) == 1;
     }
 
+    private void resetState() {
+        Random rand = new Random();
+        if (!Objects.equals(this.game.getPlayer().getState(), "")) {
+            String state = this.game.getPlayer().getState();
+            int luck = rand.nextInt(3);
+            if (luck == 1) {
+                System.out.println("Vous n'êtes plus " + state);
+                this.game.getPlayer().setState("");
+            }
+        }
 
+        if (this.breakable instanceof Monster monster) {
+            if (!Objects.equals(monster.getState(), "")) {
+                String state = monster.getState();
+                int luck = rand.nextInt(3);
+                if (luck == 1) {
+                    System.out.println("L'ennemi n'est plus " + state);
+                    monster.setState("");
+                }
+            }
+        }
+    }
+
+    private void checkStatePlayer(Breakable breakable) {
+        if (this.game.getPlayer().getState().equals("burn")) {
+            this.game.getPlayer().setHealth(-5);
+        } else if (this.game.getPlayer().getState().equals("freeze")) {
+            this.game.getPlayer().passTurn();
+        } else if (this.game.getPlayer().getState().equals("paralyse")) {
+            this.game.getPlayer().setSpeed(this.game.getPlayer().getSpeed() / 2);
+        } else {
+            this.playerTurn(breakable);
+        }
+    }
+
+    //        if (this.game.getPlayer().getState().equals("poison")) {
+//            this.game.getPlayer().setHealth(-poison);
+//        }
+    private void checkStateMonster() {
+        if (breakable instanceof Monster monster) {
+            if (monster.getState().equals("burn")) {
+                System.out.println("Pv ennemie : " + monster.getHealth() + " - 5");
+                monster.setHealth(-5);
+                this.monsterTurn();
+            }
+            else if (monster.getState().equals("freeze")) {
+                System.out.println("Ennemi gelé");
+                monster.passTurn();
+            }
+            else if (monster.getState().equals("paralyse")) {
+                monster.setSpeed(this.game.getPlayer().getSpeed() / 2);
+                this.monsterTurn();
+            }
+            else {
+                this.monsterTurn();
+            }
+        }
+
+
+    }
 }

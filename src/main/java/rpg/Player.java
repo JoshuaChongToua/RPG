@@ -1,8 +1,10 @@
 package rpg;
 
+import rpg.Classes.Mage;
 import rpg.Items.Potion;
 
 import java.util.ArrayList;
+import java.util.Objects;
 import java.util.Random;
 import java.util.Scanner;
 
@@ -22,6 +24,8 @@ public class Player {
     private double maxXp;
     private double stamina;
     private double maxStamina;
+    private String state;
+
 
     private int x = 0;
     private int y = 0;
@@ -36,6 +40,8 @@ public class Player {
         this.weapon = null;
         this.health = 20;
         this.maxXp = 500;
+        this.stamina = 100;
+        this.state = "";
     }
 
     public Player() {
@@ -45,7 +51,10 @@ public class Player {
         this.inventaire = new ArrayList<>();
         this.weapon = null;
         this.health = 20;
+        this.stamina = 100;
         this.maxXp = 500;
+        this.state = "";
+
     }
 
     //getter setter
@@ -185,6 +194,13 @@ public class Player {
         this.maxXp += augmentation;
     }
 
+    public String getState() {
+        return state;
+    }
+
+    public void setState(String state) {
+        this.state = state;
+    }
 
     // Methodes
 
@@ -196,15 +212,15 @@ public class Player {
 
     public void showStats() {
         System.out.println("Name: " + getName());
-        System.out.println("Money: " + getMoney());
+        System.out.println("Money: " + Math.round(getMoney() * 100.0) / 100.0);
         System.out.println("Level: " + getLevel());
         System.out.println("Classe: " + getClasse());
-        System.out.println("atk: " + getAtk());
-        System.out.println("def: " + getDef());
-        System.out.println("speed: " + getSpeed());
-        System.out.println("health: " + getHealth());
-        System.out.println("xp: " + getXp());
-        System.out.println("MaxXp: " + getMaxXp());
+        System.out.println("atk: " + Math.round(getAtk() * 100.0) / 100.0);
+        System.out.println("def: " + Math.round(getDef() * 100.0) / 100.0);
+        System.out.println("speed: " + Math.round(getSpeed() * 100.0) / 100.0);
+        System.out.println("health: " + Math.round(getHealth() * 100.0) / 100.0);
+        System.out.println("xp: " + Math.round(getXp() * 100.0) / 100.0);
+        System.out.println("MaxXp: " + Math.round(getMaxXp() * 100.0) / 100.0);
     }
 
     public void addItemToInventaire(Item item) {
@@ -236,9 +252,9 @@ public class Player {
                 try {
                     int index = Integer.parseInt(choice);
                     if (index >= 0 && index < this.inventaire.size()) {
-                        System.out.println("Vous avez choisi l'objet : " + this.inventaire.get(index).toStringInventaire());
+                        System.out.println("Vous avez choisi l'objet : " + this.inventaire.get(index).toString());
                         if (this.inventaire.get(index) instanceof Weapon) {
-                            System.out.println("Voulez-vous l'équiper ? ");
+                            System.out.println("Voulez-vous l'équiper ? [oui / non]");
                             String finalChoice = sc.nextLine();
                             switch (finalChoice) {
                                 case "oui":
@@ -254,12 +270,13 @@ public class Player {
                                     break;
                             }
                         } else if (this.inventaire.get(index) instanceof Potion) {
-                            System.out.println("Voulez-vous l'utiliser ? ");
+                            System.out.println("Voulez-vous l'utiliser ? [oui / non]");
                             String finalChoice = sc.nextLine();
                             switch (finalChoice) {
                                 case "oui":
                                     this.use((Potion) this.inventaire.get(index));
                                     System.out.println("Vous avez bu la " + this.inventaire.get(index).getName());
+                                    this.inventaire.remove(this.inventaire.get(index));
                                     break;
 
                                 case "non":
@@ -296,7 +313,7 @@ public class Player {
 
     public void use(Weapon weapon) {
         this.setWeapon(weapon);
-        this.setAtk(weapon.damage);
+        this.setAtk(this.atk + weapon.damage);
     }
 
     public void use(Potion potion) {
@@ -338,20 +355,31 @@ public class Player {
     public void attack(Monster monster) {
         if (this.weapon == null) {
             monster.hit(this.atk);
-            this.stamina += 5;
         } else {
             monster.hit(this.atk * this.weapon.getMonsterRationDamage());
-            this.stamina += 5;
         }
+        this.stamina += 5;
+        if (Objects.equals(this.classe.getName(), "Mage")) {
+            Mage mage = (Mage) this.getClasse();
+            if (mage.getMana()<100) {
+                mage.setMana(mage.getMana() + 5);
+            }
+        }
+
     }
 
     public void attack(Obstacle obstacle) {
         if (this.weapon == null) {
             obstacle.hit(this.atk);
-            this.stamina += 5;
         } else {
             obstacle.hit(this.atk * this.weapon.getMonsterRationDamage());
-            this.stamina += 5;
+        }
+        this.stamina += 5;
+        if (Objects.equals(this.classe.getName(), "Mage")) {
+            Mage mage = (Mage) this.getClasse();
+            if (mage.getMana()<100) {
+                mage.setMana(mage.getMana() + 5);
+            }
         }
     }
 
@@ -365,6 +393,7 @@ public class Player {
 
     public void xpManager (double xp) {
         this.xp += xp;
+        System.out.println("Vous avez gagné " + xp + " points d'expérience");
         if (this.xp >= this.maxXp) {
             double rest = this.xp - this.maxXp;
             this.level ++;

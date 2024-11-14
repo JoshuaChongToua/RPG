@@ -52,11 +52,16 @@ public class Potion extends Item {
 
     @Override
     public String showItem() {
-        return "Potion de " + effectType + " qui augmente de " + value;
+        return "Potion de " + effectType + " qui augmente de " + value + "la valeur de " + effectType;
     }
 
     @Override
     public String toStringInventaire() {
+        return this.name + " (" + effectType + " + " + value + ")";
+    }
+
+    @Override
+    public String toString() {
         return this.name + " (" + effectType + " + " + value + ")";
     }
 

@@ -19,6 +19,13 @@ public abstract class Weapon extends Item {
         this.speAtkRatio = speAtkRatio;
     }
 
+    public Weapon(String name, double damage,  double price, double monsterDamageRatio, double obstacleDamageRatio) {
+        super(name, price);
+        this.damage = damage;
+        this.monsterDamageRatio = monsterDamageRatio;
+        this.obstacleDamageRatio = obstacleDamageRatio;
+    }
+
     //getter setter
     public double getDamage() {
         return damage;

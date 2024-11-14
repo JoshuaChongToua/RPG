@@ -1,7 +1,9 @@
 package rpg;
 
+import rpg.Classes.Mage;
 import rpg.Classes.Warrior;
 import rpg.Classes.Shooter;
+import rpg.Items.Potion;
 import rpg.Weapons.Axe;
 
 import java.util.ArrayList;
@@ -17,19 +19,8 @@ public class Game {
 
     /// constructeur
     public Game() {
-        Monster goblin = new Monster("Gobelin", 2, 3, 3, 4, 5);
-        Monster troll = new Monster("Troll", 42, 3, 13, 4, 5);
-        Monster loup = new Monster("Loup", 42, 3, 3, 4, 24);
-        this.monsters = new ArrayList<>();
-        this.monsters.add(goblin);
-        this.monsters.add(troll);
-        this.monsters.add(loup);
         this.player = new Player();
         this.createPlayer();
-        this.shop = new Shop(this.player);
-        shop.generateItems();
-
-        this.gameMap = new GameMap(7, 7, this.player, this);
         startGame();
     }
 
@@ -64,130 +55,68 @@ public class Game {
         String name = sc.nextLine();
         this.player.setName(name);
 
-        System.out.println("Choix de la classe : ");
-        System.out.println("1. Guerrier");
-        System.out.println("2. tireur");
-        int choice = sc.nextInt();
+        boolean validChoice = false;
+        while (!validChoice) {
+            System.out.println("Choix de la classe : ");
+            System.out.println("1. Guerrier");
+            System.out.println("2. tireur");
+            System.out.println("3. Mage");
+            String choice = sc.nextLine();
+            switch (choice) {
+                case "1":
+                    this.player.setAtk(this.player.getAtk() + 12);
+                    this.player.setDef(this.player.getDef() + 12);
+                    this.player.setSpeed(this.player.getSpeed() + 5);
+                    this.player.setHealth(this.player.getHealth() + 35);
+                    this.player.setMaxHealth(this.player.getHealth());
 
-        if (choice == 1) {
-            this.player.setAtk(this.player.getAtk() + 12);
-            this.player.setDef(this.player.getDef() + 12);
-            this.player.setSpeed(this.player.getSpeed() -20);
-            this.player.setHealth(this.player.getHealth() + 1000);
-            this.player.setMaxHealth(this.player.getHealth());
+                    this.player.setClasse(new Warrior());
+                    System.out.println("Tu as choisi la classe Guerrier");
+                    validChoice = true;
+                    break;
+                case "2":
+                    this.player.setAtk(this.player.getAtk() + 15);
+                    this.player.setDef(this.player.getDef() + 6);
+                    this.player.setSpeed(this.player.getSpeed() + 12);
+                    this.player.setHealth(this.player.getHealth() + 25);
+                    this.player.setMaxHealth(this.player.getHealth());
 
-            this.player.setClasse(new Warrior());
-            System.out.println("Tu as choisi la classe Guerrier");
+                    this.player.setClasse(new Shooter());
+                    System.out.println("Tu as choisi la classe Tireur");
+                    validChoice = true;
+                    break;
+                case "3":
+                    this.player.setAtk(this.player.getAtk() + 15);
+                    this.player.setDef(this.player.getDef() + 6);
+                    this.player.setSpeed(this.player.getSpeed() + 27);
+                    this.player.setHealth(this.player.getHealth() + 22);
+                    this.player.setMaxHealth(this.player.getHealth());
 
-        } else if (choice == 2) {
-            this.player.setAtk(this.player.getAtk() + 15);
-            this.player.setDef(this.player.getDef() + 6);
-            this.player.setSpeed(this.player.getSpeed() + 12);
-            this.player.setHealth(this.player.getHealth() + 12);
-            this.player.setMaxHealth(this.player.getHealth());
+                    this.player.setClasse(new Mage());
+                    validChoice = true;
+                    System.out.println("Tu as choisi la classe Mage");
+                    break;
 
-            this.player.setClasse(new Shooter());
-            System.out.println("Tu as choisi la classe Tireur");
-
+                default:
+                    System.out.println("Choix invalide");
+                    break;
+            }
         }
+
+
+
         this.player.showStats();
 
         return this.player;
     }
 
-    public void menu() {
-        Scanner sc = new Scanner(System.in);
-        System.out.println("1. Aventure");
-        System.out.println("2. Inventaire");
-        System.out.println("3. Stats");
-        System.out.println("4. Boutique");
-        System.out.println("5. Quitter la partie");
-
-        String choice = sc.nextLine();
-
-        while (!choice.equals("5")) {
-            switch (choice) {
-                case "1":
-                    System.out.println("C'est parti !!");
-                    String monsterChoice;
-                    while (true) {
-                        int i = 0;
-                        for (Monster monster : this.monsters) {
-                            if (monster.getHealth() <= 0) {
-                                System.out.println("[" + i + "]. " + monster.getName() + "(Déja vaincu)");
-
-                            } else {
-                                System.out.println("[" + i + "]. " + monster.getName());
-                            }
-                            i++;
-                        }
-                        System.out.println("Qui voulez vous affronter ?  (quitter ? [quit])");
-                        monsterChoice = sc.nextLine();
-
-                        if (monsterChoice.equals("quit")) {
-                            System.out.println("Retour au menu");
-                            break;
-                        }
-
-                        try {
-                            int index = Integer.parseInt(monsterChoice);
-                            if (index >= 0 && index < this.monsters.size()) {
-                                System.out.println("Vous avez choisi d'affronter : " + this.monsters.get(index).getName());
-                                if (this.monsters.get(index) instanceof Monster) {
-                                    System.out.println("Voulez-vous l'affronter ? [oui/non]");
-                                    String finalChoice = sc.nextLine();
-                                    switch (finalChoice) {
-                                        case "oui":
-                                            Fight fight = new Fight(this, this.monsters.get(index));
-                                            break;
-
-                                        case "non":
-                                            break;
-
-                                        default:
-                                            System.out.println("Choix invalide. Essayez de nouveau.");
-                                            break;
-                                    }
-                                }
-                            } else {
-                                System.out.println("Indice invalide. Veuillez entrer un indice entre 0 et " + (this.monsters.size() - 1) + " ou 'quit' pour quitter.");
-                            }
-                        } catch (NumberFormatException e) {
-                            System.out.println("Saisie invalide. Veuillez entrer un indice valide ou 'quit' pour quitter.");
-                        }
-                    }
-                    break;
-                case "2":
-                    System.out.println("Affichage de l'inventaire...");
-                    player.showInventaire();
-                    break;
-                case "3":
-                    System.out.println("Affichage des stats...");
-                    player.showStats();
-                    break;
-                case "4":
-                    System.out.println("Ouverture de la boutique...");
-                    this.goInShop();
-                    break;
-                default:
-                    System.out.println("Choix invalide. Essayez de nouveau.");
-                    break;
-            }
-
-            // Réaffiche les options après chaque action
-            System.out.println("1. Aventure");
-            System.out.println("2. Inventaire");
-            System.out.println("3. Stats");
-            System.out.println("4. Boutique");
-            System.out.println("5. Quitter la partie");
-            choice = sc.nextLine();
-        }
-        System.out.println("Merci d'avoir joué !");
-    }
-
-
     public void startGame() {
-        //menu();
+        this.monsters = new ArrayList<>();
+        this.shop = new Shop(this.player);
+        shop.generateItems();
+        this.generateMonster();
+
+        this.gameMap = new GameMap(7, 7, this.player, this);
         Scanner scanner = new Scanner(System.in);
         while (true) {
             gameMap.displayMap();
@@ -220,7 +149,11 @@ public class Game {
         } else {
 
             for (Item item : this.shop.getItems()) {
-                System.out.println("[" + i + "] " + item.toString() + "\n" + item.asciiArt());
+                if (item instanceof Potion potion) {
+                    System.out.println("[" + i + "] " + item.toStringInventaire() + "\n" + item.asciiArt());
+                } else {
+                    System.out.println("[" + i + "] " + item.toString() + "\n" + item.asciiArt());
+                }
                 i++;
             }
 
@@ -243,7 +176,7 @@ public class Game {
                             System.out.println("Vous ne possèdez pas assez d'argent");
                         } else {
                             System.out.println("Vous avez choisi l'objet : " + this.shop.getItems().get(index));
-                            System.out.println("Etês-vous sûr de vouloir l'acheter ? ");
+                            System.out.println("Etês-vous sûr de vouloir l'acheter ? [oui / non]");
                             choice = scanner.nextLine();
                             if (choice.equals("oui") || choice.equals("o")) {
                                 Item item = this.shop.getItems().get(index);
@@ -277,6 +210,15 @@ public class Game {
 //        for (Monster monster : this.monsters) {
 //            System.out.println("Points de vie du monstre " + monster.getName() + " : " + monster.getHealth());
 //        }
+    }
+
+    public void generateMonster() {
+        Random random = new Random();
+        int count = 3 +random.nextInt(4);
+        for (int i = 0; i <= count; i++) {
+            Monster monster = new Monster(this.player.getLevel());
+            this.monsters.add(monster);
+        }
     }
 
 }

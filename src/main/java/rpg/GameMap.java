@@ -6,10 +6,10 @@ import java.util.Random;
 import java.util.Scanner;
 
 class GameMap {
-    private Tile[][] map;  // Matrice de tuiles
-    private int width;     // Largeur de la carte
-    private int height;    // Hauteur de la carte
-    private Player player; // Joueur
+    private Tile[][] map;
+    private int width;
+    private int height;
+    private Player player;
     private Game game;
     private int tileX = 0;
     private int tileY = 0;
@@ -21,26 +21,21 @@ class GameMap {
     public GameMap(int width, int height, Player player, Game game) {
         this.width = width;
         this.height = height;
-        this.map = new Tile[width][height]; // La matrice est déclarée avec width puis height
+        this.map = new Tile[width][height];
         this.player = player;
         this.game = game;
-        generateMap(); // Générer la carte après l'initialisation
+        generateMap();
     }
 
     private void generateMap() {
-        // Exemple simple de génération de carte
         for (int x = 0; x < width; x++) {
             for (int y = 0; y < height; y++) {
-                // Remplissez avec des tuiles vides
                 map[x][y] = new EmptyTile();
             }
         }
 
-        // Ajouter des monstres à des positions spécifiques
         addMonsters();
-        // Ajouter des magasins à des positions spécifiques
         addShops();
-        // Ajouter le joueur à sa position initiale
         addPlayer();
 
         Random rand = new Random();
@@ -250,6 +245,7 @@ class GameMap {
                     case "o":
                         this.game.getPlayer().setPosition(0, 0);
                         generateMap();
+                        game.startGame();
                         return false;
 
                     case "non":
